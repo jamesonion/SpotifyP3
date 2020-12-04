@@ -52,6 +52,11 @@ void MakeTree(ifstream &file, Tree &valenceTree, Tree &danceTree, Tree &energyTr
 
             getline(file, name, ','); // if the name has a comma in it there is a bug
             getline(file, artist); //use until API
+            artist.erase(std::remove(artist.begin(), artist.end(), '\''), artist.end());
+            artist.erase(std::remove(artist.begin(), artist.end(), '['), artist.end());
+            artist.erase(std::remove(artist.begin(), artist.end(), ']'), artist.end());
+            artist.erase(std::remove(artist.begin(), artist.end(), '"'), artist.end());
+
 
             valenceTree.insert(ID, valence);
             danceTree.insert(ID, danceability);
@@ -69,6 +74,92 @@ void MakeTree(ifstream &file, Tree &valenceTree, Tree &danceTree, Tree &energyTr
     }
 }
 
+//TODO: CREATE MAP BETWEEN ARTIST AND GENRE
+void mapArtistandGenre(ifstream& file, unordered_map<string, vector<string>>& map) {
+    string genre, artist, header;
+    getline(file, header);
+    while (!file.eof()) {
+        getline(file, artist, ',');
+        artist.erase(std::remove(artist.begin(), artist.end(), '\''), artist.end());
+        artist.erase(std::remove(artist.begin(), artist.end(), '['), artist.end());
+        artist.erase(std::remove(artist.begin(), artist.end(), ']'), artist.end());
+        artist.erase(std::remove(artist.begin(), artist.end(), '"'), artist.end());
+        getline(file, genre);
+        genre.erase(std::remove(genre.begin(), genre.end(), '"'), genre.end());
+        genre.erase(std::remove(genre.begin(), genre.end(), '['), genre.end());
+        genre.erase(std::remove(genre.begin(), genre.end(), ']'), genre.end());
+
+
+
+        //get rid of all of the ','s in genres
+        if (genre.find(',') == string::npos)
+            map[artist].push_back(genre);
+        else {
+            while(genre.find(',') != string::npos) {
+                string temp = genre.substr(0, genre.find(','));
+                map[artist].push_back(temp);
+                genre = genre.substr(genre.find(',') + 1);
+            }
+            //loop stops before adding the last genre
+            string temp = genre.substr(0, genre.find(','));
+            map[artist].push_back(temp);
+        }
+    }
+}
+
+void instrumentalAndSpeechCheck(set<string>& suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness) {
+    auto iter = suggestable.begin();
+    while (iter != suggestable.end()) {
+        if (IDs[*iter][4] > avgInstrumentalness + .25f || IDs[*iter][4] < avgInstrumentalness - .25f) {
+            string temp = *iter;
+            iter++;
+            suggestable.erase(temp);
+        }
+        else if (IDs[*iter][5] > avgSpeechiness + .2f || IDs[*iter][5] < avgSpeechiness - .2f) {
+            string temp = *iter;
+            iter++;
+            suggestable.erase(temp);
+        }
+        else {
+            iter++;
+        }
+    }
+}
+
+void genreCrossCheck(set<string>& suggestable, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
+    auto iter = suggestable.begin();
+    while (iter != suggestable.end()) {
+        bool remove = true;
+        //Separate songNames.iter.second into separate strings for all the artists
+        string artist = songNames[*iter].second;
+        while (artist.find(',') != string::npos && remove) {
+            string temp = artist.substr(0, artist.find(','));
+            for (string x : artistGenre[temp]) {
+                if (userLikedGenres.find(x) != userLikedGenres.end()) {
+                    remove = false;
+                    break;
+                }
+            }
+            artist = artist.substr(artist.find(',') + 2); //substring the actual string to the next artist, + 2 to get past the ", "
+        }
+        artist = artist.substr(0, artist.find(','));
+        if (remove) { //can remove but should lead to some small optimizations
+            for (string x : artistGenre[artist]) {
+                if (userLikedGenres.find(x) != userLikedGenres.end()) {
+                    remove = false;
+                    break;
+                }
+            }
+        }
+        if (remove) {
+            string temp = *iter;
+            iter++;
+            suggestable.erase(temp);
+        }
+        else
+            iter++;
+    }
+}
 //recursive function to fill set
 void songSuggestionSetRec(Tree::Node* curr, set<string>& suggested, float upper, float lower) {
     if (curr == nullptr) {
@@ -217,8 +308,8 @@ int main() {
     Tree acousticnessTree = Tree();
 
     //given the name or ID we need to be able to find the 4 values easily
-    unordered_map<string, vector<float>> IDs;     //Vector pos 0 = valence, 1 = dance, 2 = energy, 3 = acoustic, 4 = instrumentalness
-    unordered_map<string, pair<string, string>> songNames;     //ID -> <name, artist>
+    unordered_map<string, vector<float>> IDs;   //Vector pos 0 = valence, 1 = dance, 2 = energy, 3 = acoustic, 4 = instrumentalness
+    unordered_map<string, pair<string, string>> songNames;  //ID -> <name, artist>
 
     //"Graphs": <float upper limit, vector <string ID>>
     unordered_map<float, vector<string>> valGraph;
@@ -229,17 +320,35 @@ int main() {
     MakeTree(data, valenceTree, danceTree, energyTree, acousticnessTree, IDs, songNames);
     data.close();
 
+    data.open("spotifyGenres.csv");
+    unordered_map<string, vector<string>> artistGenre; //Artist, Genres
+    mapArtistandGenre(data, artistGenre);
+    data.close();
+
     //valenceTree.PrintInOrder();
 
     //prompt user to input names of songs they like: if possible make it a search engine where they can add and remove in GUI
     cout << "Insert ID. Type Done to conclude." << endl;
-    vector<string> userLikedSongs;
+    vector<string> userLikedSongs; //used for calculating song property averages
+    set<string> userLikedGenres; //used for cross-check at the end
     string ID;
     while (ID != "Done") {
         getline(cin, ID);
         if (IDs.find(ID) != IDs.end()) {
             userLikedSongs.push_back(ID);
-            ///FIXME remove []'s and 's from artist names
+            //Add the artists' genres into the userLikedGenres set
+            string artists = songNames[ID].second;
+            while (artists.find(',') != string::npos) {
+                string temp = artists.substr(0, artists.find(',')); //Substrate the string in case there are multiple artists
+                for (string& x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
+//                    if (x != "") //FIXME check whether or not we want to include {} genres, which are typically musicals
+                    userLikedGenres.insert(x);
+                }
+                artists = artists.substr(artists.find(',') + 2);
+            }
+            artists.substr(0, artists.find(',')); //While only accounts for substrings separated by ',' - this is here to add the final artist's genres
+            userLikedGenres.insert(artists);
+
             cout << "Successfully added " << songNames[ID].first << " by " << songNames[ID].second << endl;
         }
         else if (ID == "Done")
@@ -247,8 +356,6 @@ int main() {
         else
             cout << "Sorry, we could not find that ID." << endl;
     }
-
-    //see if we can manage this
 
     //calc average values
     float avgVal = 0.0f, avgDance = 0.0f, avgEnergy = 0.0f, avgAcoustic = 0.0f, avgInstrumentalness = 0.0f, avgSpeechiness = 0.0f;
@@ -261,12 +368,8 @@ int main() {
         avgSpeechiness += IDs[userLikedSongs[i]][5];
     }
 
-    avgVal /= userLikedSongs.size();
-    avgDance /= userLikedSongs.size();
-    avgEnergy /= userLikedSongs.size();
-    avgAcoustic /= userLikedSongs.size();
-    avgInstrumentalness /= userLikedSongs.size();
-    avgSpeechiness /= userLikedSongs.size();
+    //Divide to get average
+    avgVal /= userLikedSongs.size(); avgDance /= userLikedSongs.size(); avgEnergy /= userLikedSongs.size(); avgAcoustic /= userLikedSongs.size(); avgInstrumentalness /= userLikedSongs.size(); avgSpeechiness /= userLikedSongs.size();
 
     //Want to dynamically adjust this for different elements
     float range = .1f;
@@ -282,31 +385,25 @@ int main() {
     cout << suggestable.size() << endl;
 
     //Check for instrumentalness and speechiness
-    auto iter = suggestable.begin();
-    while (iter != suggestable.end()) {
-        if (IDs[*iter][4] > avgInstrumentalness + .25f || IDs[*iter][4] < avgInstrumentalness - .25f) {
-            string temp = *iter;
-            iter++;
-            suggestable.erase(temp);
-        }
-        else if (IDs[*iter][5] > avgSpeechiness + .2f || IDs[*iter][5] < avgSpeechiness - .2f) {
-            string temp = *iter;
-            iter++;
-            suggestable.erase(temp);
-        }
-        else {
-            iter++;
-        }
+    instrumentalAndSpeechCheck(suggestable, IDs, avgInstrumentalness, avgSpeechiness);
+    cout << "instrumental " << suggestable.size() << endl;
+    //Check for artist-genre cross check
+    genreCrossCheck(suggestable, songNames, artistGenre, userLikedGenres);
+
+    //FIXME, temp fix for removing same ID's in user inputted and suggestions
+    for (string x : userLikedSongs) {
+        suggestable.erase(x);
     }
 
     ofstream suggestions;
     suggestions.open("suggestions.txt");
     for (string x : suggestable) {
         x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-        suggestions << x << endl;
+        suggestions << songNames[x].first << " by " << songNames[x].second << endl;
+//        suggestions << x << endl;
     }
 
-    cout << suggestable.size() << endl;
+    cout << "Genre: " << suggestable.size() << endl;
 
     return 0;
 }
