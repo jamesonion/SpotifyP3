@@ -107,7 +107,7 @@ void mapArtistandGenre(ifstream& file, unordered_map<string, vector<string>>& ma
     }
 }
 
-void instrumentalAndSpeechCheck(set<string>& suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness) {
+set<string> instrumentalAndSpeechCheck(set<string> suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness) {
     auto iter = suggestable.begin();
     while (iter != suggestable.end()) {
         if (IDs[*iter][4] > avgInstrumentalness + .25f || IDs[*iter][4] < avgInstrumentalness - .25f) {
@@ -124,9 +124,10 @@ void instrumentalAndSpeechCheck(set<string>& suggestable, unordered_map<string, 
             iter++;
         }
     }
+    return suggestable;
 }
 
-void genreCrossCheck(set<string>& suggestable, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
+set<string> genreCrossCheck(set<string> suggestable, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
     auto iter = suggestable.begin();
     while (iter != suggestable.end()) {
         bool remove = true;
@@ -159,7 +160,35 @@ void genreCrossCheck(set<string>& suggestable, unordered_map<string, pair <strin
         else
             iter++;
     }
+    return suggestable;
 }
+set<string> filter(set<string>& suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
+    cout << "Initial Size :" << suggestable.size() << endl;
+
+    set<string> filter1;
+    set<string> filter2;
+    set<string> filter3;
+
+    filter1 = instrumentalAndSpeechCheck(suggestable, IDs, avgInstrumentalness, avgSpeechiness);
+    cout << "Size after instrumental filter applied: " << filter1.size() << endl;
+
+    filter2 = genreCrossCheck(suggestable, songNames, artistGenre, userLikedGenres);
+    cout << "Size after genre filter applied: " << filter2.size() << endl;
+
+    if (!filter1.empty())
+        filter3 = genreCrossCheck(filter1, songNames, artistGenre, userLikedGenres);
+    cout << "Size after both filters applied: " << filter3.size() << endl;
+
+    if (!filter3.empty())
+        return filter3;
+    else if (!filter2.empty())
+        return filter2;
+    else if (!filter1.empty())
+        return filter1;
+    else
+        return suggestable;
+}
+
 //recursive function to fill set
 void songSuggestionSetRec(Tree::Node* curr, set<string>& suggested, float upper, float lower) {
     if (curr == nullptr) {
@@ -333,26 +362,35 @@ int main() {
     set<string> userLikedGenres; //used for cross-check at the end
     string ID;
     while (ID != "Done") {
+        set<string> userInputtedSongs; //used to stop user from inputting same song twice to skew averages
         getline(cin, ID);
-        if (IDs.find(ID) != IDs.end()) {
-            userLikedSongs.push_back(ID);
-            //Add the artists' genres into the userLikedGenres set
-            string artists = songNames[ID].second;
-            while (artists.find(',') != string::npos) {
-                string temp = artists.substr(0, artists.find(',')); //Substrate the string in case there are multiple artists
-                for (string& x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
+        if (userInputtedSongs.find(ID) == userInputtedSongs.end()) {
+            if (IDs.find(ID) != IDs.end()) {
+                userLikedSongs.push_back(ID);
+                userInputtedSongs.insert(ID);
+                //Add the artists' genres into the userLikedGenres set
+                string artists = songNames[ID].second;
+                while (artists.find(',') != string::npos) {
+                    string temp = artists.substr(0, artists.find(
+                            ',')); //Substrate the string in case there are multiple artists
+                    for (string &x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
 //                    if (x != "") //FIXME check whether or not we want to include {} genres, which are typically musicals
-                    userLikedGenres.insert(x);
+                        userLikedGenres.insert(x);
+                    }
+                    artists = artists.substr(artists.find(',') + 2);
                 }
-                artists = artists.substr(artists.find(',') + 2);
-            }
-            artists.substr(0, artists.find(',')); //While only accounts for substrings separated by ',' - this is here to add the final artist's genres
-            userLikedGenres.insert(artists);
+                artists.substr(0, artists.find(
+                        ',')); //While only accounts for substrings separated by ',' - this is here to add the final artist's genres
+                for (string &x : artistGenre[artists])
+                    userLikedGenres.insert(x);
 
-            cout << "Successfully added " << songNames[ID].first << " by " << songNames[ID].second << endl;
+                cout << "Successfully added " << songNames[ID].first << " by " << songNames[ID].second << endl;
+            }
+            else if (ID == "Done")
+                break;
         }
-        else if (ID == "Done")
-            break;
+        else if (userInputtedSongs.find(ID) != userInputtedSongs.end())
+            cout << "You've already entered ID: " << ID << endl;
         else
             cout << "Sorry, we could not find that ID." << endl;
     }
@@ -382,13 +420,7 @@ int main() {
     cout << valenceSet.size() << " " << danceSet.size() << " " << energySet.size() << " " << acousticSet.size() << endl;
 
     set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
-    cout << suggestable.size() << endl;
-
-    //Check for instrumentalness and speechiness
-    instrumentalAndSpeechCheck(suggestable, IDs, avgInstrumentalness, avgSpeechiness);
-    cout << "instrumental " << suggestable.size() << endl;
-    //Check for artist-genre cross check
-    genreCrossCheck(suggestable, songNames, artistGenre, userLikedGenres);
+    suggestable = filter(suggestable, IDs, avgInstrumentalness, avgSpeechiness, songNames, artistGenre, userLikedGenres);
 
     //FIXME, temp fix for removing same ID's in user inputted and suggestions
     for (string x : userLikedSongs) {
@@ -400,10 +432,8 @@ int main() {
     for (string x : suggestable) {
         x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
         suggestions << songNames[x].first << " by " << songNames[x].second << endl;
-//        suggestions << x << endl;
     }
-
-    cout << "Genre: " << suggestable.size() << endl;
+    cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
 
     return 0;
 }
