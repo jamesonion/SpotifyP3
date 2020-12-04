@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+C:/Users/James/Desktop/Coding/CLionProjects/SpotifyP3/Tree.h
+string
+-
+iostream
+-
+vector
+-
+
+C:/Users/James/Desktop/Coding/CLionProjects/SpotifyP3/main.cpp
+Tree.h
+C:/Users/James/Desktop/Coding/CLionProjects/SpotifyP3/Tree.h
+iostream
+-
+unordered_map
+-
+fstream
+-
+string
+-
+set
+-
+algorithm
+-
+map
+-
+fstream
+-
+string
+-
+
