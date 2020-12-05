@@ -7,21 +7,19 @@ using namespace std;
 class Tree {
 public:
     struct Node {
-        //ID is spotify ID
-        string ID;
-        //value can be interchanged with whatever we are using
-        double value = 0;
+        vector<string> ID;         //ID is spotify ID, use a vector for duplicates
+        float value = 0.0f;         //value can be interchanged with whatever we are using
         int height = 1;
         Node* left = nullptr;
         Node* right = nullptr;
 
         Node();
-        Node(string _ID, double _value);
+        Node(string _ID, float _value);
         int findHeight(Node* root);
         int balanceFactor(Node* root);
     };
     Tree();
-    void insert(string& ID, double& value);
+    void insert(string& ID, float& value);
     void PrintInOrder();
     Node* root = nullptr;
 
@@ -29,17 +27,17 @@ private:
 
     void PrintInOrderRec(Node* curr, vector<string>& temp);
     //string inOrderHelper(Node* root);
-    Node* insertHelper(Node* root, string& ID, double& value);
+    Node* insertHelper(Node* root, string& ID, float& value);
     int rotation(Node* root);
     Node* rotateLeft(Node* root);
     Node* rotateRight(Node* root);
     Node* rotateLeftRight(Node* root);
     Node* rotateRightLeft(Node* root);
-    Node* search(Node* root, double& value);
+    Node* search(Node* root, float& value);
 };
 //Node functions
-Tree::Node::Node(string _ID, double _value) {
-    ID = _ID;
+Tree::Node::Node(string _ID, float _value) {
+    ID.push_back(_ID);
     value = _value;
 }
 //height starts at 1
@@ -68,13 +66,13 @@ Tree::Tree() {
 }
 
 //Tree Functions
-void Tree::insert(string& ID, double& value) {
+void Tree::insert(string& ID, float& value) {
     Node* temp = root;
     root = insertHelper(temp, ID, value);
 }
 
 //Finds where to insert a node, if it is unique as well as update the height of the nodes it passes
-Tree::Node* Tree::insertHelper(Node* root, string& ID, double& value) {
+Tree::Node* Tree::insertHelper(Node* root, string& ID, float& value) {
     if (root == nullptr) {
         return new Node(ID, value);
     }
@@ -83,9 +81,9 @@ Tree::Node* Tree::insertHelper(Node* root, string& ID, double& value) {
         root->right = insertHelper(root->right, ID, value);
     else if (root->value > value)
         root->left = insertHelper(root->left, ID, value);
-    //when ID isn't unique break out of function, dont want to return nullptr because it will remove the pre-existing ID
+    //When value is not unique then add the ID to the vector of songs
     else {
-        cout << "unsuccessful" << endl;
+        root->ID.push_back(ID);
         return root;
     }
     //because height set to 1 on initialization, don't need to update height of the lowest node
@@ -178,21 +176,6 @@ Tree::Node* Tree::rotateRightLeft(Node* root) {
     return root;
 }
 
-
-/*Tree::Node* Tree::search(Node* root, double& value) {
-    //if root has no children (cannot search any further because the exact value does not exist) return
-    if (root == nullptr)
-        return nullptr;
-    if (!root->left && !root->right)
-        return root;
-    if (root->value == value)
-        return root;
-    else if (root->value > value)
-        search(root->right, value);
-    else
-        search(root->left, value);
-}*/
-
 void Tree::PrintInOrder() {
     vector<string> temp;
     PrintInOrderRec(root, temp);
@@ -210,7 +193,8 @@ void Tree::PrintInOrderRec(Node* curr, vector<string>& temp) {
     }
     else {
         PrintInOrderRec(curr->left, temp);
-        temp.push_back(curr->ID);
+        for (string& x : curr->ID)
+            temp.push_back(x);
         PrintInOrderRec(curr->right, temp);
     }
 }
