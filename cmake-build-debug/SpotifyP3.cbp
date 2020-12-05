@@ -80,6 +80,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="C:/Users/James/Desktop/Coding/CLionProjects/SpotifyP3/Graph.h">
+			<Option target="SpotifyP3"/>
+		</Unit>
 		<Unit filename="C:/Users/James/Desktop/Coding/CLionProjects/SpotifyP3/Tree.h">
 			<Option target="SpotifyP3"/>
 		</Unit>

@@ -12,9 +12,11 @@
 
 using namespace std;
 
-//test
-//could edit data set to only include the columns we are using to make it faster
-void MakeTree(ifstream &file, Tree &valenceTree, Tree &danceTree, Tree &energyTree, Tree &acousticnessTree, unordered_map<string, vector<float>> &IDs, unordered_map<string, pair<string, string>>& songNames) {
+//fills value-separated trees and maps with their respective IDs
+void MakeTree(ifstream &file, Tree &valenceTree, Tree &danceTree, Tree &energyTree, Tree &acousticnessTree,
+              unordered_map<int, vector<string>>& valMap, unordered_map<int, vector<string>>& danceMap,
+              unordered_map<int, vector<string>>& energyMap, unordered_map<int, vector<string>>& acousticMap,
+              unordered_map<string, vector<float>> &IDs, unordered_map<string, pair<string, string>>& songNames) {
     if (file.is_open()) {
         string endLine;
         getline(file, endLine); // get rid of header line
@@ -70,11 +72,21 @@ void MakeTree(ifstream &file, Tree &valenceTree, Tree &danceTree, Tree &energyTr
             IDs[ID].push_back(speechiness);
             songNames[ID] = make_pair(name, artist);
 
+            //graph insertion (need to think if there is an actual way to create an adjacency list
+            //TODO: temporary index placement in map representation
+            int index = ((int) (valence * 100)) / 5;
+            valMap[index].push_back(ID);
+            index = ((int) (danceability * 100)) / 5;
+            danceMap[index].push_back(ID);
+            index = ((int) (energy * 100)) / 5;
+            energyMap[index].push_back(ID);
+            index = ((int) (acousticness * 100)) / 5;
+            acousticMap[index].push_back(ID);
         }
     }
 }
 
-//TODO: CREATE MAP BETWEEN ARTIST AND GENRE
+//maps artists to their respective genres
 void mapArtistandGenre(ifstream& file, unordered_map<string, vector<string>>& map) {
     string genre, artist, header;
     getline(file, header);
@@ -107,7 +119,10 @@ void mapArtistandGenre(ifstream& file, unordered_map<string, vector<string>>& ma
     }
 }
 
-set<string> instrumentalAndSpeechCheck(set<string> suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness) {
+//Returns a set after filtering out songs that do not match similar acousticness/speechiness values
+// (to get rid of tracks that are spoken-word/etc. when user inputs songs)
+set<string> instrumentalAndSpeechCheck(set<string> suggestable, unordered_map<string, vector<float>>& IDs,
+                                       float& avgInstrumentalness, float& avgSpeechiness) {
     auto iter = suggestable.begin();
     while (iter != suggestable.end()) {
         if (IDs[*iter][4] > avgInstrumentalness + .25f || IDs[*iter][4] < avgInstrumentalness - .25f) {
@@ -127,7 +142,9 @@ set<string> instrumentalAndSpeechCheck(set<string> suggestable, unordered_map<st
     return suggestable;
 }
 
-set<string> genreCrossCheck(set<string> suggestable, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
+//Returns a set after filtering out songs that do not match user's inputted songs' genres
+set<string> genreCrossCheck(set<string> suggestable, unordered_map<string, pair <string, string>>& songNames,
+                            unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
     auto iter = suggestable.begin();
     while (iter != suggestable.end()) {
         bool remove = true;
@@ -162,7 +179,12 @@ set<string> genreCrossCheck(set<string> suggestable, unordered_map<string, pair 
     }
     return suggestable;
 }
-set<string> filter(set<string>& suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness, float& avgSpeechiness, unordered_map<string, pair <string, string>>& songNames, unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
+
+//Calls both instrumental/speech check and genreCheck and returns whichever set nonempty set comes first
+// both >> genreCheck >> instrumentalCheck >> no filter
+set<string> filter(set<string>& suggestable, unordered_map<string, vector<float>>& IDs, float& avgInstrumentalness,
+                   float& avgSpeechiness, unordered_map<string, pair <string, string>>& songNames,
+                   unordered_map<string, vector<string>>& artistGenre, set<string>& userLikedGenres) {
     cout << "Initial Size :" << suggestable.size() << endl;
 
     set<string> filter1;
@@ -334,9 +356,55 @@ set<string> smallestIntersection(set<string> valenceSet, set<string> danceSet, s
     }
 }
 
-//Tree::Node* treeTraversal(Tree::Node* root) {
+//fills song suggestion sets with map data structure by pushing all IDs near average value into a set
+//Range should be in multiples of .05f
+set<string> mapSongSuggestionSet(unordered_map<int, vector<string>>& map, float value, float range_) {
+    int index = (int) (value * 20); //adjusts both values to 0-19 index range of map
+    int range = (int) (range_ * 20);
+    set<string> set;
 
-//}
+    for (const string& x : map[index])
+        set.insert(x);
+
+    //when average is at the bottom of the distribution graph, add IDs from 0 -> range
+    if (index == 0) {
+        for (int i = 1; i <= range; i++) {
+            for (string x : map[index + i])
+                set.insert(x);
+        }
+    }
+    //when average is at the top of the distribution graph, add IDs from 1- range -> 1
+    // * there are no songs with a value of 1 in any category
+    else if (index == 19) {
+        for (int i = 1; i <= range; i++) {
+            for (const string &x : map[index - i])
+                set.insert(x);
+        }
+    }
+    else {
+        //insert 1/2 the range from top and bottom
+        bool continueUp = true; bool continueDown = true;
+        for (int i = 1; i <= range; i++) {
+            if (continueDown) {
+                if (index - i >= 0) {
+                    for (string x : map[index - i])
+                        set.insert(x);
+                } else
+                    continueDown = false;
+            }
+            if (continueUp) {
+                if (index + i <= 19) {
+                    for (string x : map[index + i])
+                        set.insert(x);
+                }
+                else
+                    continueUp = false;
+            }
+        }
+    }
+    return set;
+}
+
 
 int main() {
 
@@ -349,16 +417,17 @@ int main() {
     Tree acousticnessTree = Tree();
 
     //given the name or ID we need to be able to find the 4 values easily
-    unordered_map<string, vector<float>> IDs;   //Vector pos 0 = valence, 1 = dance, 2 = energy, 3 = acoustic, 4 = instrumentalness
+    unordered_map<string, vector<float>> IDs;   //Vector pos 0 = valence, 1 = dance, 2 = energy, 3 = acoustic, 4 = instrumentalness, 5 = speechiness
     unordered_map<string, pair<string, string>> songNames;  //ID -> <name, artist>
 
-    //"Graphs": <float upper limit, vector <string ID>>
-    unordered_map<float, vector<string>> valGraph;
-    unordered_map<float, vector<string>> danceGraph;
-    unordered_map<float, vector<string>> energyGraph;
-    unordered_map<float, vector<string>> acousticGraph;
+    //If we can figure out how to create some sort of adjacency list then use that
+    //currently, int is the lower limit on a value (0-19 b/c range is currently .05f), vector<string> contains IDs in this range
+    unordered_map<int, vector<string>> valMap;
+    unordered_map<int, vector<string>> danceMap;
+    unordered_map<int, vector<string>> energyMap;
+    unordered_map<int, vector<string>> acousticMap;
 
-    MakeTree(data, valenceTree, danceTree, energyTree, acousticnessTree, IDs, songNames);
+    MakeTree(data, valenceTree, danceTree, energyTree, acousticnessTree, valMap, danceMap, energyMap, acousticMap, IDs, songNames);
     data.close();
 
     data.open("spotifyGenres.csv");
@@ -417,17 +486,36 @@ int main() {
         avgSpeechiness += IDs[userLikedSongs[i]][5];
     }
 
-    //Divide to get average
+    //Divides all of the above by size to get averages
     avgVal /= userLikedSongs.size(); avgDance /= userLikedSongs.size(); avgEnergy /= userLikedSongs.size(); avgAcoustic /= userLikedSongs.size(); avgInstrumentalness /= userLikedSongs.size(); avgSpeechiness /= userLikedSongs.size();
 
-    //Want to dynamically adjust this for different elements
-    float range = .1f;
+    string mode; bool useTree = false;
+    while (mode != "map" && mode != "tree") {
+        cout << "Enter 'map' or 'tree' to use the respective Data Structure: " << endl;
+        getline(cin, mode);
+        if (mode == "tree")
+            useTree = true;
+        if (mode == "map")
+            break;
+    }
 
-    //these are the sets storing the similar values to the ID entered
-    set<string> valenceSet = songSuggestionSet(valenceTree, avgVal, range);
-    set<string> danceSet = songSuggestionSet(danceTree, avgDance, range);
-    set<string> energySet = songSuggestionSet(energyTree, avgEnergy, range);
-    set<string> acousticSet = songSuggestionSet(acousticnessTree, avgAcoustic, .25f);
+    //Want to dynamically adjust this for different elements I imagine
+    float range = .05f;
+    set<string> valenceSet; set<string> danceSet; set<string> energySet; set<string> acousticSet;
+    if (useTree) {
+        //these are the sets storing the similar values to the ID entered
+        valenceSet = songSuggestionSet(valenceTree, avgVal, range);
+        danceSet = songSuggestionSet(danceTree, avgDance, range);
+        energySet = songSuggestionSet(energyTree, avgEnergy, range);
+        acousticSet = songSuggestionSet(acousticnessTree, avgAcoustic, .25f);//set at .25f because distribution is sparse
+    }
+    else {
+        valenceSet = mapSongSuggestionSet(valMap, avgVal, range);
+        danceSet = mapSongSuggestionSet(danceMap, avgDance, range);
+        energySet = mapSongSuggestionSet(energyMap, avgEnergy, range);
+        acousticSet = mapSongSuggestionSet(acousticMap, avgAcoustic, .25f);
+    }
+
     cout << valenceSet.size() << " " << danceSet.size() << " " << energySet.size() << " " << acousticSet.size() << endl;
 
     set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
