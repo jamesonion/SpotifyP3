@@ -191,23 +191,35 @@ set<string> filter(set<string>& suggestable, unordered_map<string, vector<float>
 
 //recursive function to fill set
 void songSuggestionSetRec(Tree::Node* curr, set<string>& suggested, float upper, float lower) {
-    if (curr == nullptr) {
+    if (curr == nullptr)
         return;
-    }
     else {
-        //if value is inside of range and the node isn't null insert the ID into the set then call function again
-        if (curr->left != nullptr && curr->left->value <= upper && curr->left->value >= lower) {
-            for (string& x : curr->left->ID)
-            suggested.insert(x);
-            songSuggestionSetRec(curr->left, suggested, upper, lower);
+        songSuggestionSetRec(curr->left, suggested, upper, lower);
+        if (curr->value <= upper && curr->value >= lower) {
+            for (string &x : curr->ID)
+                suggested.insert(x);
         }
-        if (curr->right != nullptr && curr->right->value <= upper && curr->right->value >= lower) {
-            for (string&x : curr->right->ID)
-            suggested.insert(x);
-            songSuggestionSetRec(curr->right, suggested, upper, lower);
-        }
+        songSuggestionSetRec(curr->right, suggested, upper, lower);
     }
 }
+//    if (curr == nullptr) {
+//        return;
+//    }
+//    else {
+//        //if value is inside of range and the node isn't null insert the ID into the set then call function again
+//        if (curr->left != nullptr && curr->left->value <= upper && curr->left->value >= lower) {
+//            for (string& x : curr->left->ID)
+//                suggested.insert(x);
+//            songSuggestionSetRec(curr->left, suggested, upper, lower);
+//        }
+//        if (curr->right != nullptr && curr->right->value <= upper && curr->right->value >= lower) {
+//            for (string&x : curr->right->ID)
+//            suggested.insert(x);
+//            songSuggestionSetRec(curr->right, suggested, upper, lower);
+//        }
+//    }
+//}
+
 //creates set for the given value paramter
 //sets will contain the ID's of songs
 //this function is somewhat inconcsistent might need to be changed in some ways like finding where to start
@@ -371,8 +383,7 @@ int main() {
                 //Add the artists' genres into the userLikedGenres set
                 string artists = songNames[ID].second;
                 while (artists.find(',') != string::npos) {
-                    string temp = artists.substr(0, artists.find(
-                            ',')); //Substrate the string in case there are multiple artists
+                    string temp = artists.substr(0, artists.find(',')); //Substrate the string in case there are multiple artists
                     for (string &x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
 //                    if (x != "") //FIXME check whether or not we want to include {} genres, which are typically musicals
                         userLikedGenres.insert(x);
