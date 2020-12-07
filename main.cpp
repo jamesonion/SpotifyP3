@@ -547,7 +547,7 @@ int main() {
     suggestions.open("suggestions.txt");
     for (string x : suggestable) {
         x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-        suggestions << songNames[x].first << " by " << songNames[x].second << endl;
+        suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
     }
     cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
 
@@ -567,6 +567,7 @@ int main() {
         inputtedSongs.open("LikedSongs.txt");
         string nextSongs;
         getline(inputtedSongs, nextSongs);
+        ID = "";
 
         if (nextSongs == initSongs) {
             inputtedSongs.close();
@@ -660,7 +661,7 @@ int main() {
             suggestions.open("suggestions.txt");
             for (string x : suggestable) {
                 x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-                suggestions << songNames[x].first << " by " << songNames[x].second << endl;
+                suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
             }
             cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
             initSongs = nextSongs;
