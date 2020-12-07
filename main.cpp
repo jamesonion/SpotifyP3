@@ -8,9 +8,11 @@
 #include <map>
 #include <fstream>
 #include <string>
+#include <chrono>
 
 
 using namespace std;
+using namespace std::chrono;
 
 //fills value-separated trees and maps with their respective IDs
 void MakeTree(ifstream& file, Tree& valenceTree, Tree& danceTree, Tree& energyTree, Tree& acousticnessTree,
@@ -519,6 +521,7 @@ int main() {
     }
     MorT.close();
 
+    auto start = high_resolution_clock::now();
     if (useTree) {
         //these are the sets storing the similar values to the ID entered
         valenceSet = songSuggestionSet(valenceTree, avgVal, range);
@@ -537,6 +540,9 @@ int main() {
 
     set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
     suggestable = filter(suggestable, IDs, avgInstrumentalness, avgSpeechiness, songNames, artistGenre, userLikedGenres);
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << duration.count() << endl;
 
     //FIXME, temp fix for removing same ID's in user inputted and suggestions
     for (string x : userLikedSongs) {
@@ -545,14 +551,12 @@ int main() {
 
     ofstream suggestions;
     suggestions.open("suggestions.txt");
+    suggestions << duration.count() << endl;
     for (string x : suggestable) {
         x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
         suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
     }
     cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
-
-    //FIXME:need to delete the contents of the sets and other objects that will be reused
-
     //end of intitial run of the program
 
 
@@ -633,6 +637,7 @@ int main() {
 
         if (nextSongs != initSongs || nextMorT != initMorT) {
             //Want to dynamically adjust this for different elements I imagine
+            start = high_resolution_clock::now();
             if (useTree) {
                 //these are the sets storing the similar values to the ID entered
                 valenceSet = songSuggestionSet(valenceTree, avgVal, range);
@@ -651,6 +656,9 @@ int main() {
 
             set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
             suggestable = filter(suggestable, IDs, avgInstrumentalness, avgSpeechiness, songNames, artistGenre, userLikedGenres);
+            stop = high_resolution_clock::now();
+            duration = duration_cast<milliseconds>(stop - start);
+            cout << duration.count() << endl;
 
             //FIXME, temp fix for removing same ID's in user inputted and suggestions
             for (string x : userLikedSongs) {
@@ -659,6 +667,7 @@ int main() {
 
             ofstream suggestions;
             suggestions.open("suggestions.txt");
+            suggestions << duration.count() << endl;
             for (string x : suggestable) {
                 x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
                 suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
