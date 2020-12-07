@@ -1,14 +1,14 @@
 import json
 import requests
+from PIL import Image
 
-spotify_token = "BQCzntyVB7RRFhJbYwqvtPx2nAdBWDYXu8VsWgmMBQoSgzwA7xQFveJit_qbY6Km3mVFT4VOH9DhFdYMKW3qH27sEhB6eX94OFKRnsxGfWZ2u8JClwytG4KFZyuUQlfsWun6vJ3Bvc6HE2LrubYpsKw4Pv-IY4L7dDU"
+spotify_token = "BQCHsL2omf3m5pBWAtHv_K-EFb36BHDNZMl5qDVGrKLDBiRn09VB9SxEwnGbKY_vZvJj3-CCwYg3bIoCOxc7WyLuyhoocawsEPP79aAQnoRj_LCpVb-X1VpUshPZzOUrywexHX2AolOGWYdYp83WbSCNw3OTP_-Q0l8"
 class songRec:
 
     def search_track(self, song_name):
         query = "https://api.spotify.com/v1/search?q=track%3A{}&type=track&offset=0&limit=20".format(
             song_name
         )
-        #query = "https://api.spotify.com/v1/search?q=tania%20bowra&type=artist"
         response = requests.get(
             query,
             headers={
@@ -28,7 +28,6 @@ class songRec:
             song_name,
             artist
         )
-        #query = "https://api.spotify.com/v1/search?q=tania%20bowra&type=artist"
         response = requests.get(
             query,
             headers={
@@ -39,10 +38,17 @@ class songRec:
         response_json = response.json()
         songs = response_json["tracks"]["items"]
 
-        uri = songs[0]["uri"]
-        return uri
+        #uri = songs[0]["uri"]
+        return songs
 
-returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", "Sugar Wraith")
+#returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", "I fall apart")
+returnedSongs = songRec.search_track_and_artist("0f2a3b6474214d87b144419b7ac084cd", "I fall apart", "Post Malone")
 for i in returnedSongs:
-    print(i["uri"])
+    print(i["external_urls"]) #urls for link to spotify
+    print(i["preview_url"])#link to  a preview of the song
+    print(i["id"]) #ids of songs
+    #i["images"]
+    #image = Image.open(i["images"])
+    #image.show()#attempting to find album covers
+    
 
