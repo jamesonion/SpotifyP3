@@ -1,7 +1,9 @@
 import json
 import requests
+import PySimpleGUIQt as sg
 
-spotify_token = "BQCHsL2omf3m5pBWAtHv_K-EFb36BHDNZMl5qDVGrKLDBiRn09VB9SxEwnGbKY_vZvJj3-CCwYg3bIoCOxc7WyLuyhoocawsEPP79aAQnoRj_LCpVb-X1VpUshPZzOUrywexHX2AolOGWYdYp83WbSCNw3OTP_-Q0l8"
+#have to get a new spotify token before using this
+spotify_token = "BQDhJTSJ8nq7tBVg2Jxac7EvTlffeFTaD1T72mpydHqnWqrl4CDoSmC-KKl2Sr-u43mMo4x5IlfoZDg2n8lDoq09TPW9UkHJpkEbXS3W7TXNj-LbOFT-3ZxvdDvZn6QD2LOyrPJRRFcuei20ia-BrDbyTFU2Ngq-usM"
 class songRec:
 
     def search_track(self, song_name):
@@ -37,28 +39,27 @@ class songRec:
         response_json = response.json()
         songs = response_json["tracks"]["items"]
 
-        uri = songs[0]["uri"]
-        return uri
+        #uri = songs[0]["uri"]
+        return songs
 
-returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", "Sugar Wraith")
+def findID2(_song, _artist):
+    returnedSongs = songRec.search_track_and_artist("0f2a3b6474214d87b144419b7ac084cd", _song, _artist)
+    return returnedSongs[0]["id"]
+
+
+def findID(_song):
+    returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", _song);
+    if len(returnedSongs) > 1:
+        return "input artist"
+    else:
+        return returnedSongs[0]["id"]
+
+
+
+returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", "Feeling Whitney")
 for i in returnedSongs:
     print(i["id"])
-# import spotipy
-# from spotipy.oauth2 import SpotifyClientCredentials
 
-# client_credentials_manager = SpotifyClientCredentials("5d2c27886c8a4836844580b11c289dac", "1372129a4a254c2a9642956dbe7b75f0")
-# sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
-
-# playlists = sp.user_playlists('spotify')
-# while playlists:
-#     for i, playlist in enumerate(playlists['items']):
-#         print("%4d %s %s" % (i + 1 + playlists['offset'], playlist['uri'],  playlist['name']))
-#     if playlists['next']:
-#         playlists = sp.next(playlists)
-#     else:
-#         playlists = None
-
-import PySimpleGUIQt as sg
 
 layout = [[sg.Image(filename="Logo4.png")],
           [sg.Text("Song Suggestion Algorithm", justification='center', size=(25,1))],
@@ -72,7 +73,7 @@ layout = [[sg.Image(filename="Logo4.png")],
 window = sg.Window('Playlists to improve? Let’s find your groove.', layout, size=(540,960), icon="Logo.ico", resizable=True, element_justification='center', background_image="backb.png")
 
 inputtedsongs = []
-#input = open("input.txt", "r")
+input = open("input.txt", "r")
 
 while True:
     event, values = window.read()
@@ -81,7 +82,15 @@ while True:
     if event == 'Add Song':
         song = values['-INPUT-']
         output = open("output.txt", "w")
-        output.write(song + "\n")
+
+        #ethan added
+        songID = findID(song)
+        if songID == "input artist":
+            #FIXME prompt the user to input an artist
+            artist = values['-INPUT-']
+            songID = findID2(song, artist)
+
+        output.write(songID + "\n")
         output.close()
         result = input.readline()
         if result == "Success.\n":
@@ -104,6 +113,8 @@ while True:
         for x in inputtedsongs:
             output.write(x)
         output.close()
+    # if its a map, must write map to the MorT.txt file, if its a tree write tree
+    # first line of MorT.txt will be an int that gets incremented when the mode is changed
     if event == '-Map-':
         if window['-Map-'].Get() == True:
             window['-Tree-'].update(value=False)
@@ -116,5 +127,7 @@ while True:
             window['-Map-'].update(value=True)
 
    # window['-OUTPUT-'].update('Finding songs similar to: ' + values['-INPUT-'])
+   # after writing the IDs of all of the songs inputted, after submit must then read in from the suggested songs text file and display the suggested song along with the visual representation of the 4 elements
+   # suggestions.txt is formatted as a csv file with the first thing being the song name, the second being the artist, then the following 4 being valence, then danceability, then energy, then acousticness
 
 window.close()
