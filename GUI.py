@@ -7,7 +7,7 @@ import pandas as pd
 from queue import Queue
 
 #have to get a new spotify token before using this
-spotify_token = "BQAnB0Nk10jYJrbyFvTLb8UbBxVClB1x-1iJdhNf_6XbMcsgqYn5P7cw5H03lGLxuWDN-xRMqFLojJL7wmEaKPsCjHjP01lrOk51potvO0VYL6g9RzLQxrhri655zw330CCb6Ne95g4ReRU"
+spotify_token = "BQAxeSmc5dBj5LVzaGGS4Ta1VTjQ4P-TrFAQCrcndGa2p6JeRsOStuS23R0NsJpNHcQfq-xcgi_PEUigNJbg7VF65joXFF-VBLpCiliIilAxgsf5mogdhYHyT3uVEBlkvDPZi4FQFg6rkF4"
 class songRec:
 
     def search_track(self, song_name):
@@ -68,15 +68,16 @@ for i in returnedSongs:
 layout = [[sg.Image(filename="Logo4.png", pad=((0.0),(50,0)))],
           [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
-          [sg.Button('Like', size=(25,1), visible=False), sg.Button('Play', size=(25,1), visible=False), sg.Button('Next', size=(25,1), visible=False)],
+          [sg.Button('Like', visible=False), sg.Button('Play', visible=False), sg.Button('Next', visible=False)],
           #[sg.Button('Like', size=(25,1), visible=False)],
           [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter artist name", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
           [sg.Text(key='-OUTPUT-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))],
           [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE'), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')]]
 
-window = sg.Window('Playlists to improve? Let’s find your groove.', layout, size=(540,960), icon="Logo.ico", resizable=True, element_justification='center', background_image="backb.png")
-
+window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon="Logo.ico", resizable=False, element_justification='center', background_image="backb.png")
+#window.bind("'<Return>'",'-SONG-')
+#window.bind("'<Return>'",'-ARTIST-')
 
 dschange = 0
 idchange = 0
@@ -90,7 +91,7 @@ output.write(str(idchange) + "\n")
 output.close()
 output2 = open("MorT.txt", "w")
 output2.write(str(dschange) + "\n")
-output2.write("Tree\n")
+output2.write("tree\n")
 output2.close()
 dschange += 1
 idchange += 1
@@ -192,7 +193,7 @@ while True:
             window['-Map-'].update(value=True)
             output2.write("map\n")
         output2.close()
-    if event == '-Next-':
+    if event == 'Next':
         currentsong = songdata.get()
         window['-TITLE-'].update(currentsong[0])
         window['-SUBTITLE-'].update(currentsong[1])
@@ -200,10 +201,5 @@ while True:
     if event == 'Like':
         songID = findID2(currentsong[0],currentsong[1])
         inputtedsongs.append(songID)
-
-   # window['-OUTPUT-'].update('Finding songs similar to: ' + values['-INPUT-'])
-   # after writing the IDs of all of the songs inputted, after submit must then read in from the suggested songs text file and display the suggested song along with the visual representation of the 4 elements
-   # suggestions.txt is formatted as a csv file with the first thing being the song name, the second being the artist, then the following 4 being valence, then danceability, then energy, then acousticness
-   # the first line of suggestions will be a number which corresponds to the runtime for the map or tree implementation, the number is in milliseconds
-
+        
 window.close()
