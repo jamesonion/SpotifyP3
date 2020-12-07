@@ -68,7 +68,8 @@ for i in returnedSongs:
 layout = [[sg.Image(filename="Logo4.png", pad=((0.0),(50,0)))],
           [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
-          [sg.Button('Previous', size=(25,1), visible=False), sg.Button('Play', size=(25,1), visible=False), sg.Button('Next', size=(25,1), visible=False)],
+          [sg.Button('Like', size=(25,1), visible=False), sg.Button('Play', size=(25,1), visible=False), sg.Button('Next', size=(25,1), visible=False)],
+          #[sg.Button('Like', size=(25,1), visible=False)],
           [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter artist name", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
           [sg.Text(key='-OUTPUT-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))],
@@ -82,6 +83,7 @@ idchange = 0
 inputtedsongs = []
 runtime = 0
 songdata = Queue()
+currentsong = ['Title','Artist',0,0,0,0]
 
 output = open("LikedSongs.txt", "w")
 output.write(str(idchange) + "\n")
@@ -110,12 +112,14 @@ def updateSongs():
                 energy = row[4]
                 acousticness = row[5]
                 songdata.put([title,artist,valence,danceability,energy,acousticness])
-            window['Previous'].update(visible=True)
+            window['Like'].update(visible=True)
             window['Play'].update(visible=True)
             window['Next'].update(visible=True)
-            firstsong = songdata.get()
-            window['-TITLE-'].update(firstsong[0])
-            window['-SUBTITLE-'].update(firstsong[1])
+            global currentsong 
+            currentsong = songdata.get()
+            window['-TITLE-'].update(currentsong[0])
+            window['-SUBTITLE-'].update(currentsong[1])
+            songdata.put(currentsong)
     else:
         updateSongs()
 
@@ -167,7 +171,6 @@ while True:
         output.close()
         updateSongs()
 
-
     if event == '-Map-':
         output2 = open("MorT.txt", "w")
         output2.write(str(dschange) + "\n")
@@ -189,6 +192,14 @@ while True:
             window['-Map-'].update(value=True)
             output2.write("map\n")
         output2.close()
+    if event == '-Next-':
+        currentsong = songdata.get()
+        window['-TITLE-'].update(currentsong[0])
+        window['-SUBTITLE-'].update(currentsong[1])
+        songdata.put(currentsong)
+    if event == 'Like':
+        songID = findID2(currentsong[0],currentsong[1])
+        inputtedsongs.append(songID)
 
    # window['-OUTPUT-'].update('Finding songs similar to: ' + values['-INPUT-'])
    # after writing the IDs of all of the songs inputted, after submit must then read in from the suggested songs text file and display the suggested song along with the visual representation of the 4 elements
