@@ -3,7 +3,7 @@ import requests
 import PySimpleGUIQt as sg
 
 #have to get a new spotify token before using this
-spotify_token = "BQDhJTSJ8nq7tBVg2Jxac7EvTlffeFTaD1T72mpydHqnWqrl4CDoSmC-KKl2Sr-u43mMo4x5IlfoZDg2n8lDoq09TPW9UkHJpkEbXS3W7TXNj-LbOFT-3ZxvdDvZn6QD2LOyrPJRRFcuei20ia-BrDbyTFU2Ngq-usM"
+spotify_token = "BQC-Vn0CIB-3JhhvIqpBusZ2PwmA9O4-6JGfHr74PdeQryS2hbYLIQ2vNnYdq9AES5hwVYdJLliK-bbBLmYqI6jP3kWOKoQlSdwGzi0uMHkkAaBo0b0FQsnHqMZ0fRTBhwJFIJH25AbspP8"
 class songRec:
 
     def search_track(self, song_name):
@@ -64,8 +64,8 @@ for i in returnedSongs:
 layout = [[sg.Image(filename="Logo4.png")],
           [sg.Text("Song Suggestion Algorithm", justification='center', size=(25,1))],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", justification='center', size=(50,1))],
-          [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-INPUT-')],
-          [sg.Listbox(values = ["Artists"], visible=False, key='-ARTISTS-', enable_events=True, bind_return_key=True)],
+          [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter the artist's name here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
+          #[sg.Listbox(values = ["Artists"], visible=False, key='-ARTISTS-', enable_events=True, bind_return_key=True)],
           [sg.Text(size=(25,1), key='-OUTPUT-', justification='center')],
           [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True)],
           [sg.Button('Add Song', size=(25,1)), sg.Button('Submit', size=(25,1))]]
@@ -73,48 +73,40 @@ layout = [[sg.Image(filename="Logo4.png")],
 window = sg.Window('Playlists to improve? Let’s find your groove.', layout, size=(540,960), icon="Logo.ico", resizable=True, element_justification='center', background_image="backb.png")
 
 inputtedsongs = []
-input = open("input.txt", "r")
+#input = open("input.txt", "r")
+dschanged = 0
 
 while True:
     event, values = window.read()
     if event == sg.WINDOW_CLOSED:
         break
     if event == 'Add Song':
-        song = values['-INPUT-']
+        song = values['-SONG-']
         output = open("output.txt", "w")
 
         #ethan added
         songID = findID(song)
         if songID == "input artist":
-            #FIXME prompt the user to input an artist
-            artist = values['-INPUT-']
-            songID = findID2(song, artist)
-
-        output.write(songID + "\n")
-        output.close()
-        result = input.readline()
-        if result == "Success.\n":
-            lines = input.readlines()
-            window['-ARTISTS-'].update(visible=True, values=lines)
+            window['-SONG-'].update(visible=False)
+            window['-ARTIST-'].update(visible=True)
             event2, values2 = window.read()
-            if event2 == '-ARTISTS-':
-                artist = window['-ARTISTS-'].get()
-                inputtedsongs.append(song + ", " + artist[0])
+            if event2 == 'Add Song':
+                artist = values2['-SONG-']
+                songID = findID2(song, artist)
                 window['-OUTPUT-'].update('Song Added.')
-        else:
-            window['-OUTPUT-'].update('Song Does Not Exist. Try Again.')
+                window['-SONG-'].update(visible=True)
+                window['-ARTIST-'].update(visible=False)
+        output.write(songID + "\n")
+        output.close()      
     if event == 'Submit':
-        input.close()
-        output = open("output.txt", "a")
+        dschanged += 1
+        output2 = open("MorT.txt", "w")
+        output2.write(str(dschanged) + "\n")
         if window['-Map-'].Get() == True:
-            output.write("Map\n")
+            output2.write("map\n")
         else:
-            output.write("Tree\n")
-        for x in inputtedsongs:
-            output.write(x)
-        output.close()
-    # if its a map, must write map to the MorT.txt file, if its a tree write tree
-    # first line of MorT.txt will be an int that gets incremented when the mode is changed
+            output2.write("tree\n")
+        output2.close()
     if event == '-Map-':
         if window['-Map-'].Get() == True:
             window['-Tree-'].update(value=False)
