@@ -1,11 +1,3 @@
-<<<<<<< Updated upstream
-import json
-import requests
-import PySimpleGUIQt as sg
-
-#have to get a new spotify token before using this
-spotify_token = "BQC-Vn0CIB-3JhhvIqpBusZ2PwmA9O4-6JGfHr74PdeQryS2hbYLIQ2vNnYdq9AES5hwVYdJLliK-bbBLmYqI6jP3kWOKoQlSdwGzi0uMHkkAaBo0b0FQsnHqMZ0fRTBhwJFIJH25AbspP8"
-=======
 import os
 import json
 import requests
@@ -15,8 +7,7 @@ import pandas as pd
 from queue import Queue
 
 #have to get a new spotify token before using this
-spotify_token = "BQBNGge0qGDXZR_NVJAcLd45kt3OE3GrzrS4XmuNuE1GOj4mKeO6rx__R1xkZA9nM8P3pDMTBES-eG6sYFB5Dx_wpqIkUm4uzu09tfI5daCZ-9qAJh0seypYNzUszVcFWAAzg4wA5mXDA6Q"
->>>>>>> Stashed changes
+spotify_token = "BQAnB0Nk10jYJrbyFvTLb8UbBxVClB1x-1iJdhNf_6XbMcsgqYn5P7cw5H03lGLxuWDN-xRMqFLojJL7wmEaKPsCjHjP01lrOk51potvO0VYL6g9RzLQxrhri655zw330CCb6Ne95g4ReRU"
 class songRec:
 
     def search_track(self, song_name):
@@ -74,30 +65,14 @@ for i in returnedSongs:
     print(i["id"])
 
 
-<<<<<<< Updated upstream
-layout = [[sg.Image(filename="Logo4.png")],
-          [sg.Text("Song Suggestion Algorithm", justification='center', size=(25,1))],
-          [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", justification='center', size=(50,1))],
-          [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter the artist's name here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
-          #[sg.Listbox(values = ["Artists"], visible=False, key='-ARTISTS-', enable_events=True, bind_return_key=True)],
-          [sg.Text(size=(25,1), key='-OUTPUT-', justification='center')],
-          [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True)],
-          [sg.Button('Add Song', size=(25,1)), sg.Button('Submit', size=(25,1))]]
-
-window = sg.Window('Playlists to improve? Let’s find your groove.', layout, size=(540,960), icon="Logo.ico", resizable=True, element_justification='center', background_image="backb.png")
-
-inputtedsongs = []
-#input = open("input.txt", "r")
-dschanged = 0
-=======
 layout = [[sg.Image(filename="Logo4.png", pad=((0.0),(50,0)))],
-          [sg.Text("Song Suggestion Algorithm", justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
-          [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", justification='center', background_color='NONE', auto_size_text=True)],
-          [sg.Button('Previous', size=(25,1)), sg.Button('Play', size=(25,1)), sg.Button('Next', size=(25,1))],
+          [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
+          [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
+          [sg.Button('Previous', size=(25,1), visible=False), sg.Button('Play', size=(25,1), visible=False), sg.Button('Next', size=(25,1), visible=False)],
           [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter artist name", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
           [sg.Text(key='-OUTPUT-', justification='center', background_color='NONE', auto_size_text=True)],
-          [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE'), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')],
-          [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))]]
+          [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))],
+          [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE'), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')]]
 
 window = sg.Window('Playlists to improve? Let’s find your groove.', layout, size=(540,960), icon="Logo.ico", resizable=True, element_justification='center', background_image="backb.png")
 
@@ -113,28 +88,36 @@ output.write(str(idchange) + "\n")
 output.close()
 output2 = open("MorT.txt", "w")
 output2.write(str(dschange) + "\n")
+output2.write("Tree\n")
 output2.close()
 dschange += 1
 idchange += 1
 
-def loadSongs():
+def updateSongs():
     if os.path.isfile('suggestions.txt'):
         input = open('suggestions.txt')
-        runtime = input.readline()
-        input.close()
-        df = pd.read_csv('suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'])
-        for index, row in df.iterrows():
-            title = row[0]
-            artist = row[1]
-            valence = row[2]
-            danceability = row[3]
-            energy = row[4]
-            acousticness = row[5]
-            songdata.put([title,artist,valence,danceability,energy,acousticness])
-    
+        x = input.readline()
+        global runtime
+        if runtime != float(x):
+            runtime = float(x)
+            input.close()
+            df = pd.read_csv('suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'])
+            for index, row in df.iterrows():
+                title = row[0]
+                artist = row[1]
+                valence = row[2]
+                danceability = row[3]
+                energy = row[4]
+                acousticness = row[5]
+                songdata.put([title,artist,valence,danceability,energy,acousticness])
+            window['Previous'].update(visible=True)
+            window['Play'].update(visible=True)
+            window['Next'].update(visible=True)
+            firstsong = songdata.get()
+            window['-TITLE-'].update(firstsong[0])
+            window['-SUBTITLE-'].update(firstsong[1])
     else:
-        loadSongs()
->>>>>>> Stashed changes
+        updateSongs()
 
 while True:
     event, values = window.read()
@@ -142,43 +125,6 @@ while True:
         break
     if event == 'Add Song':
         song = values['-SONG-']
-<<<<<<< Updated upstream
-        output = open("output.txt", "w")
-
-        #ethan added
-        songID = findID(song)
-        if songID == "input artist":
-            window['-SONG-'].update(visible=False)
-            window['-ARTIST-'].update(visible=True)
-            event2, values2 = window.read()
-            if event2 == 'Add Song':
-                artist = values2['-SONG-']
-                songID = findID2(song, artist)
-                window['-OUTPUT-'].update('Song Added.')
-                window['-SONG-'].update(visible=True)
-                window['-ARTIST-'].update(visible=False)
-        output.write(songID + "\n")
-        output.close()      
-    if event == 'Submit':
-        dschanged += 1
-        output2 = open("MorT.txt", "w")
-        output2.write(str(dschanged) + "\n")
-        if window['-Map-'].Get() == True:
-            output2.write("map\n")
-        else:
-            output2.write("tree\n")
-        output2.close()
-    if event == '-Map-':
-        if window['-Map-'].Get() == True:
-            window['-Tree-'].update(value=False)
-        else:
-            window['-Tree-'].update(value=True)
-    if event == '-Tree-':
-        if window['-Tree-'].Get() == True:
-            window['-Map-'].update(value=False)
-        else:
-            window['-Map-'].update(value=True)
-=======
         try:
             songID = findID(song)
             if songID == "input artist":
@@ -217,8 +163,10 @@ while True:
         idchange += 1
         for x in inputtedsongs:
             output.write(x + "\n")
+        output.write("Done")
         output.close()
-        loadSongs()
+        updateSongs()
+
 
     if event == '-Map-':
         output2 = open("MorT.txt", "w")
@@ -241,7 +189,6 @@ while True:
             window['-Map-'].update(value=True)
             output2.write("map\n")
         output2.close()
->>>>>>> Stashed changes
 
    # window['-OUTPUT-'].update('Finding songs similar to: ' + values['-INPUT-'])
    # after writing the IDs of all of the songs inputted, after submit must then read in from the suggested songs text file and display the suggested song along with the visual representation of the 4 elements
