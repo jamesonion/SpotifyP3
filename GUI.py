@@ -129,5 +129,6 @@ while True:
    # window['-OUTPUT-'].update('Finding songs similar to: ' + values['-INPUT-'])
    # after writing the IDs of all of the songs inputted, after submit must then read in from the suggested songs text file and display the suggested song along with the visual representation of the 4 elements
    # suggestions.txt is formatted as a csv file with the first thing being the song name, the second being the artist, then the following 4 being valence, then danceability, then energy, then acousticness
+   # the first line of suggestions will be a number which corresponds to the runtime for the map or tree implementation, the number is in milliseconds
 
 window.close()
