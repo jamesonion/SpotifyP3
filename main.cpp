@@ -426,9 +426,10 @@ void avgCalc(float& avgVal, float& avgDance, float& avgEnergy, float& avgAcousti
 
 int main() {
 
+    cout << "accessed" << endl;
     ifstream data;
-    data.open("SpotifyData3.csv");
-
+    data.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/SpotifyData3.csv");
+    cout << "accessedagain" << endl;
     Tree valenceTree = Tree();
     Tree danceTree = Tree();
     Tree energyTree = Tree();
@@ -447,8 +448,8 @@ int main() {
 
     MakeTree(data, valenceTree, danceTree, energyTree, acousticnessTree, valMap, danceMap, energyMap, acousticMap, IDs, songNames);
     data.close();
-
-    data.open("spotifyGenres.csv");
+    cout << "tree amde" << endl;
+    data.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/spotifyGenres.csv");
     unordered_map<string, vector<string>> artistGenre; //Artist, Genres
     mapArtistandGenre(data, artistGenre);
     data.close();
@@ -466,7 +467,8 @@ int main() {
     set<string> valenceSet; set<string> danceSet; set<string> energySet; set<string> acousticSet;
 
     ifstream inputtedSongs;
-    inputtedSongs.open("LikedSongs.txt");
+    inputtedSongs.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/LikedSongs.txt");
+    cout << "songs" << endl;
     string initSongs;
     getline(inputtedSongs, initSongs);
     while (ID != "Done") {
@@ -506,7 +508,7 @@ int main() {
     inputtedSongs.close();
 
     ifstream MorT;
-    MorT.open("MorT.txt");
+    MorT.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/MorT.txt");
     string initMorT;
     getline(MorT, initMorT);
 
@@ -540,6 +542,7 @@ int main() {
 
     set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
     suggestable = filter(suggestable, IDs, avgInstrumentalness, avgSpeechiness, songNames, artistGenre, userLikedGenres);
+    cout << "filtered" << endl;
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
     cout << duration.count() << endl;
@@ -550,11 +553,11 @@ int main() {
     }
 
     ofstream suggestions;
-    suggestions.open("suggestions.txt");
+    suggestions.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/suggestions.txt");
     suggestions << duration.count() << endl;
     for (string x : suggestable) {
         x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-        suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
+        suggestions << songNames[x].first << "| " << songNames[x].second << "| " << IDs[x][0] << "| " << IDs[x][1] << "| " << IDs[x][2] << "| " << IDs[x][3] << endl;
     }
     cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
     //end of intitial run of the program
@@ -568,7 +571,7 @@ int main() {
     while (true) {
 
         ifstream inputtedSongs;
-        inputtedSongs.open("LikedSongs.txt");
+        inputtedSongs.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/LikedSongs.txt");
         string nextSongs;
         getline(inputtedSongs, nextSongs);
         ID = "";
@@ -617,7 +620,7 @@ int main() {
 
 
         ifstream MorT;
-        MorT.open("MorT.txt");
+        MorT.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/MorT.txt");
         string nextMorT;
         getline(MorT, nextMorT);
 
@@ -666,11 +669,11 @@ int main() {
             }
 
             ofstream suggestions;
-            suggestions.open("suggestions.txt");
+            suggestions.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/suggestions.txt");
             suggestions << duration.count() << endl;
             for (string x : suggestable) {
                 x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-                suggestions << songNames[x].first << ", " << songNames[x].second << ", " << IDs[x][0] << ", " << IDs[x][1] << ", " << IDs[x][2] << ", " << IDs[x][3] << endl;
+                suggestions << songNames[x].first << "| " << songNames[x].second << "| " << IDs[x][0] << "| " << IDs[x][1] << "| " << IDs[x][2] << "| " << IDs[x][3] << endl;
             }
             cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
             initSongs = nextSongs;
