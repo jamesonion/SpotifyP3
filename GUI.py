@@ -71,7 +71,7 @@ def findSample(_song):
 
 #GUI IMPLEMENTATION#
 
-layout = [[sg.Image(filename="Logo4.png", pad=((0.0),(50,0)))],
+layout = [[sg.Image(filename="Logo4.png", key="-IMAGE-")],
           [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Like', visible=False), sg.Button('Play', visible=False), sg.Button('Next', visible=False)],
@@ -118,6 +118,7 @@ def updateSongs():
                 energy = row[4]
                 acousticness = row[5]
                 songdata.put([title,artist,valence,danceability,energy,acousticness])
+            #window['-IMAGE-'].update(filename="")
             window['Like'].update(visible=True)
             window['Play'].update(visible=True)
             window['Next'].update(visible=True)
@@ -177,7 +178,7 @@ while True:
         idchange += 1
         for x in inputtedsongs:
             output.write(x + "\n")
-        output.write("Done")
+        output.write("Done\n")
         output.close()
         updateSongs()
 
