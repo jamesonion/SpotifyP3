@@ -137,7 +137,6 @@ while True:
     if event == sg.WINDOW_CLOSED:
         break
     if event == 'Add Song':
-        os.remove("test.txt")
         song = values['-SONG-']
         try:
             songID = findID(song)
@@ -181,9 +180,10 @@ while True:
             output.write(x + "\n")
         output.write("Done\n")
         output.close()
-        updateSongs()
         temp = open('test.txt', "w")
         temp.close()
+        updateSongs()
+        os.remove("test.txt")
 
     if event == '-Map-':
         output2 = open("MorT.txt", "w")
