@@ -11,7 +11,7 @@ from queue import Queue
 
 
 #have to get a new spotify token before using this#
-spotify_token = "BQBPL04QWXbmv0rGYJHjYu7DEfjmYA_V_euv3QOeRRmCVTYJomeOI-kXtPRrumfV7u1PiRTxJwPjVPZjM9LNlEb2M7yH2MVlB6a_BnbH7soo_-j4tZRXd_0LFZvDm98d-72oW3Capk2dxvE"
+spotify_token = "BQAyNC6Wx7finp5nGCAf8Ik3EyS4p3_CSb5Qdg2aHvaWr1T8ac1RmJrmSHack_pBO2fXnLIHVLrSoMw_2tqrQeEvaSD14nqK7f0ywPL0LTthTpfO3zT5dzROSa6nKWOXRP99G8FuJwF0SrA"
 class songRec:
 
     def search_track(self, song_name):
@@ -62,12 +62,12 @@ def findID(_song):
     else:
         return returnedSongs[0]["id"]
 
-#def findSample(_song):
-     #returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", _song);
-     #if len(returnedSongs) > 1:
-     #   return "input artist"
-     #else:
-        #return returnedSongs[0]["id"]
+def findSample(_song):
+     returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", _song);
+     if len(returnedSongs) > 1:
+        return "input artist"
+     else:
+        return returnedSongs[0]["id"]
 
 #GUI IMPLEMENTATION#
 
@@ -99,7 +99,7 @@ output2.write(str(dschange) + "\n")
 output2.write("tree\n")
 output2.close()
 dschange = 1
-ischange = 1
+idchange = 1
 
 def updateSongs():
     if os.path.isfile('suggestions.txt'):
@@ -126,6 +126,8 @@ def updateSongs():
             window['-TITLE-'].update(currentsong[0])
             window['-SUBTITLE-'].update(currentsong[1])
             songdata.put(currentsong)
+        else:
+            input.close()
     else:
         updateSongs()
 
