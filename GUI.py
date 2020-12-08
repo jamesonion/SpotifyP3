@@ -12,9 +12,9 @@ from queue import Queue
 
 #ACCESSING THE SPOTIFY API#
 
-
+path = "C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/"
 #have to get a new spotify token before using this#
-spotify_token = "BQBYkg8d4aut3Nr4pAWr2WBGLhuDP7NfDU688Fq4Q2q1NDAcQqlcz-dK4mzdcr-y1BU_SwyDpBZNdgI4PIZ9uhcE0IEr4kNvyJwFRAT4JrNmkejlSX3HI6053A8ZzKe3mDcKO8HhLsohB6g"
+spotify_token = "BQDw5_nxJXz_jIMlLxI5x6gxCb6L6dBXdxkSXXWvaGzgJTOEPkwWa9M1NtrvDUOS-V8opUDjmkYsUzjsma4SvCoopnj7VGSL8cLuGwuzU9e9bzIOIx4IDf_XrXrMsYmoRhVdcUOTICf0oj_lZv32Gu2leCIbtlGW3Hk"
 class songRec:
 
     def search_track(self, song_name):
@@ -80,7 +80,7 @@ def url(ID):
 
 #GUI IMPLEMENTATION#
 
-layout = [[sg.Image(filename="Logo4.png", key="-IMAGE-")],
+layout = [[sg.Image(filename=path+"Logo4.png", key="-IMAGE-")],
           [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Like', visible=False), sg.Button('Play', visible=False), sg.Button('Next', visible=False)],
@@ -90,7 +90,7 @@ layout = [[sg.Image(filename="Logo4.png", key="-IMAGE-")],
           [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE', visible=False), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')],
           [sg.Multiline(background_color='WHITE', default_text="Current Playlist:\n", key='-LIKED-')]]
 
-window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon="Logo.ico", resizable=False, element_justification='center', background_image="backb.png", force_toplevel=True)
+window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon=path+"Logo.ico", resizable=False, element_justification='center', background_image=path+"backb.png", force_toplevel=True)
 
 dschange = 0
 idchange = 0
@@ -99,11 +99,12 @@ runtime = 0
 songdata = Queue()
 currentsong = ['Title','Artist',0,0,0,0]
 
-output = open("LikedSongs.txt", "w")
+output = open(path+"LikedSongs.txt", "w")
 output.write(str(idchange) + "\n")
 output.write("Done\n")
+output.write("75ZvA4QfFiZvzhj2xkaWAh\n")
 output.close()
-output2 = open("MorT.txt", "w")
+output2 = open(path+"MorT.txt", "w")
 output2.write(str(dschange) + "\n")
 output2.write("tree\n")
 output2.close()
@@ -111,14 +112,14 @@ dschange = 1
 idchange = 1
 
 def updateSongs():
-    if os.path.isfile('suggestions.txt'):
-        input = open('suggestions.txt')
+    if os.path.isfile(path+'suggestions.txt'):
+        input = open(path+'suggestions.txt')
         x = input.readline()
         global runtime
         if runtime != float(x):
             runtime = float(x)
             input.close()
-            df = pd.read_csv('suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'], delimiter="|")
+            df = pd.read_csv(path+'suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'], delimiter="|")
             for index, row in df.iterrows():
                 title = row[0]
                 artist = row[1]
@@ -187,20 +188,20 @@ while True:
             window['Add Artist'].update(visible=False)
             window['Add Song'].update(visible=True)
     if event == 'Submit':
-        output = open("LikedSongs.txt", "w")
+        output = open(path+"LikedSongs.txt", "w")
         output.write(str(idchange) + "\n")
         idchange += 1
         for x in inputtedsongs:
             output.write(x + "\n")
         output.write("Done\n")
         output.close()
-        temp = open('test.txt', "w")
+        temp = open(path+'test.txt', "w")
         temp.close()
         updateSongs()
-        os.remove("test.txt")
+        os.remove(path+"test.txt")
 
     if event == '-Map-':
-        output2 = open("MorT.txt", "w")
+        output2 = open(path+"MorT.txt", "w")
         output2.write(str(dschange) + "\n")
         if window['-Map-'].Get() == True:
             window['-Tree-'].update(value=False)
