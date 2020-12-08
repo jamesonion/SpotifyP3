@@ -61,7 +61,7 @@ void MakeTree(ifstream& file, Tree& valenceTree, Tree& danceTree, Tree& energyTr
             artist.erase(std::remove(artist.begin(), artist.end(), ']'), artist.end());
             artist.erase(std::remove(artist.begin(), artist.end(), '"'), artist.end());
 
-
+            //placing within trees
             valenceTree.insert(ID, valence);
             danceTree.insert(ID, danceability);
             energyTree.insert(ID, energy);
@@ -74,8 +74,7 @@ void MakeTree(ifstream& file, Tree& valenceTree, Tree& danceTree, Tree& energyTr
             IDs[ID].push_back(speechiness);
             songNames[ID] = make_pair(name, artist);
 
-            //graph insertion (need to think if there is an actual way to create an adjacency list
-            //TODO: temporary index placement in map representation
+            //placing with maps
             int index = ((int)(valence * 100)) / 5;
             valMap[index].push_back(ID);
             index = ((int)(danceability * 100)) / 5;
@@ -226,23 +225,6 @@ void songSuggestionSetRec(Tree::Node* curr, set<string>& suggested, float upper,
         songSuggestionSetRec(curr->right, suggested, upper, lower);
     }
 }
-//    if (curr == nullptr) {
-//        return;
-//    }
-//    else {
-//        //if value is inside of range and the node isn't null insert the ID into the set then call function again
-//        if (curr->left != nullptr && curr->left->value <= upper && curr->left->value >= lower) {
-//            for (string& x : curr->left->ID)
-//                suggested.insert(x);
-//            songSuggestionSetRec(curr->left, suggested, upper, lower);
-//        }
-//        if (curr->right != nullptr && curr->right->value <= upper && curr->right->value >= lower) {
-//            for (string&x : curr->right->ID)
-//            suggested.insert(x);
-//            songSuggestionSetRec(curr->right, suggested, upper, lower);
-//        }
-//    }
-//}
 
 //creates set for the given value paramter
 //sets will contain the ID's of songs
@@ -459,126 +441,23 @@ int main() {
     mapArtistandGenre(data, artistGenre);
     data.close();
 
-    //valenceTree.PrintInOrder();
-
-    //prompt user to input names of songs they like: if possible make it a search engine where they can add and remove in GUI
-    //cout << "Insert ID. Type Done to conclude." << endl;
-//all variables to be used in the constant condition
     vector<string> userLikedSongs; //used for calculating song property averages
     set<string> userLikedGenres; //used for cross-check at the end
     string ID;
     float avgVal = 0.0f, avgDance = 0.0f, avgEnergy = 0.0f, avgAcoustic = 0.0f, avgInstrumentalness = 0.0f, avgSpeechiness = 0.0f;
     float range = .05f;
+
     set<string> valenceSet; set<string> danceSet; set<string> energySet; set<string> acousticSet;
     string initSongs;
     string initMorT;
     string mode;
     bool useTree;
-    /*
-    ifstream inputtedSongs;
-    inputtedSongs.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/LikedSongs.txt");
-    cout << "songs" << endl;
-    string initSongs;
-    getline(inputtedSongs, initSongs);
-    while (ID != "Done") {
-        set<string> userInputtedSongs; //used to stop user from inputting same song twice to skew averages
-        getline(inputtedSongs, ID);
-        if (userInputtedSongs.find(ID) == userInputtedSongs.end()) {
-            if (IDs.find(ID) != IDs.end()) {
-                userLikedSongs.push_back(ID);
-                userInputtedSongs.insert(ID);
-                //Add the artists' genres into the userLikedGenres set
-                string artists = songNames[ID].second;
-                while (artists.find(',') != string::npos) {
-                    string temp = artists.substr(0, artists.find(',')); //Substrate the string in case there are multiple artists
-                    for (string& x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
-//                    if (x != "") //FIXME check whether or not we want to include {} genres, which are typically musicals
-                        userLikedGenres.insert(x);
-                    }
-                    artists = artists.substr(artists.find(',') + 2);
-                }
-                artists.substr(0, artists.find(
-                    ',')); //While only accounts for substrings separated by ',' - this is here to add the final artist's genres
-                for (string& x : artistGenre[artists])
-                    userLikedGenres.insert(x);
-
-                cout << "Successfully added " << songNames[ID].first << " by " << songNames[ID].second << endl;
-            }
-            else if (ID == "Done")
-                break;
-        }
-        else if (userInputtedSongs.find(ID) != userInputtedSongs.end())
-            cout << "You've already entered ID: " << ID << endl;
-        else
-            cout << "Sorry, we could not find that ID." << endl;
-    }
-    //calc average values
-    avgCalc(avgVal, avgDance, avgEnergy, avgAcoustic, avgInstrumentalness, avgSpeechiness, IDs, userLikedSongs);
-    inputtedSongs.close();
-
-    ifstream MorT;
-    MorT.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/MorT.txt");
-    string initMorT;
-    getline(MorT, initMorT);
-
-    string mode; bool useTree = false;
-    while (mode != "map" && mode != "tree") {
-        cout << "Enter 'map' or 'tree' to use the respective Data Structure: " << endl;
-        getline(MorT, mode);
-        if (mode == "tree")
-            useTree = true;
-        if (mode == "map")
-            useTree == false;
-    }
-    MorT.close();
-
-    auto start = high_resolution_clock::now();
-    if (useTree) {
-        //these are the sets storing the similar values to the ID entered
-        valenceSet = songSuggestionSet(valenceTree, avgVal, range);
-        danceSet = songSuggestionSet(danceTree, avgDance, range);
-        energySet = songSuggestionSet(energyTree, avgEnergy, range);
-        acousticSet = songSuggestionSet(acousticnessTree, avgAcoustic, .25f);//set at .25f because distribution is sparse
-    }
-    else {
-        valenceSet = mapSongSuggestionSet(valMap, avgVal, range);
-        danceSet = mapSongSuggestionSet(danceMap, avgDance, range);
-        energySet = mapSongSuggestionSet(energyMap, avgEnergy, range);
-        acousticSet = mapSongSuggestionSet(acousticMap, avgAcoustic, .25f);
-    }
-
-    cout << valenceSet.size() << " " << danceSet.size() << " " << energySet.size() << " " << acousticSet.size() << endl;
-
-    set<string> suggestable = smallestIntersection(valenceSet, danceSet, energySet, acousticSet);
-    suggestable = filter(suggestable, IDs, avgInstrumentalness, avgSpeechiness, songNames, artistGenre, userLikedGenres);
-    cout << "filtered" << endl;
-    auto stop = high_resolution_clock::now();
-    auto duration = duration_cast<milliseconds>(stop - start);
-    cout << duration.count() << endl;
-
-    //FIXME, temp fix for removing same ID's in user inputted and suggestions
-    for (string x : userLikedSongs) {
-        suggestable.erase(x);
-    }
-
-    ofstream suggestions;
-    suggestions.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/suggestions.txt");
-    suggestions << duration.count() << endl;
-    for (string x : suggestable) {
-        x.erase(std::remove(x.begin(), x.end(), '\''), x.end());
-        suggestions << songNames[x].first << "| " << songNames[x].second << "| " << IDs[x][0] << "| " << IDs[x][1] << "| " << IDs[x][2] << "| " << IDs[x][3] << endl;
-    }
-    cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
-    //end of intitial run of the program
-
-
-    */
-
 
     //beginning of portion of code that will remain running
     //the files being read in will be indicated that they have changed when the first lines numerical value is incremented by 1
     while (true) {
 
+        //Check if Python has sent the check file, indicating the changes have been made to user playlist
         if (DoesFileExist("test.txt")) {
             ifstream inputtedSongs;
             inputtedSongs.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/LikedSongs.txt");
@@ -586,6 +465,7 @@ int main() {
             getline(inputtedSongs, nextSongs);
             ID = "";
 
+            //If there are no changes to the user playlist exit
             if (nextSongs == initSongs) {
                 inputtedSongs.close();
             }
@@ -602,7 +482,6 @@ int main() {
                             while (artists.find(',') != string::npos) {
                                 string temp = artists.substr(0, artists.find(',')); //Substrate the string in case there are multiple artists
                                 for (string& x : artistGenre[temp]) {                    //iterate through that artists' genres and push into the set
-                                //if (x != "") //FIXME check whether or not we want to include {} genres, which are typically musicals
                                     userLikedGenres.insert(x);
                                 }
                                 artists = artists.substr(artists.find(',') + 2);
@@ -628,7 +507,7 @@ int main() {
                 avgCalc(avgVal, avgDance, avgEnergy, avgAcoustic, avgInstrumentalness, avgSpeechiness, IDs, userLikedSongs);
             }
 
-
+            //Check whether or not a map or tree is being used to generate the song suggestions
             ifstream MorT;
             MorT.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/MorT.txt");
             string nextMorT;
@@ -649,7 +528,7 @@ int main() {
 
 
             if (nextSongs != initSongs || nextMorT != initMorT) {
-                //Want to dynamically adjust this for different elements I imagine
+                //start timing now
                 auto start = high_resolution_clock::now();
                 if (useTree) {
                     //these are the sets storing the similar values to the ID entered
@@ -673,7 +552,6 @@ int main() {
                 auto duration = duration_cast<milliseconds>(stop - start);
                 cout << duration.count() << endl;
 
-                //FIXME, temp fix for removing same ID's in user inputted and suggestions
                 for (string x : userLikedSongs) {
                     suggestable.erase(x);
                 }
@@ -687,17 +565,12 @@ int main() {
                 }
                 suggestions.close();
                 ofstream test2;
-                // test2.open("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/test2.txt");
-                 //test2.close();
-                 //for (int i = 0; i < 100000; i++)
-                    // int x = i;
 
                 cout << "Final size after eliminating songs user has inputted: " << suggestable.size() << endl;
                 initSongs = nextSongs;
                 initMorT = nextMorT;
             }
         }
-        //remove("C:/Users/Ethan Glogau/source/repos/treeeeeeeee/treeeeeeeee/test2.txt");
     }
     return 0;
 }
