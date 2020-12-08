@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import requests
 import PySimpleGUIQt as sg
@@ -6,8 +7,11 @@ import pandas as pd
 
 from queue import Queue
 
-#have to get a new spotify token before using this
-spotify_token = "BQAxeSmc5dBj5LVzaGGS4Ta1VTjQ4P-TrFAQCrcndGa2p6JeRsOStuS23R0NsJpNHcQfq-xcgi_PEUigNJbg7VF65joXFF-VBLpCiliIilAxgsf5mogdhYHyT3uVEBlkvDPZi4FQFg6rkF4"
+#ACCESSING THE SPOTIFY API#
+
+
+#have to get a new spotify token before using this#
+spotify_token = "BQBPL04QWXbmv0rGYJHjYu7DEfjmYA_V_euv3QOeRRmCVTYJomeOI-kXtPRrumfV7u1PiRTxJwPjVPZjM9LNlEb2M7yH2MVlB6a_BnbH7soo_-j4tZRXd_0LFZvDm98d-72oW3Capk2dxvE"
 class songRec:
 
     def search_track(self, song_name):
@@ -58,26 +62,26 @@ def findID(_song):
     else:
         return returnedSongs[0]["id"]
 
+#def findSample(_song):
+     #returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", _song);
+     #if len(returnedSongs) > 1:
+     #   return "input artist"
+     #else:
+        #return returnedSongs[0]["id"]
 
-
-returnedSongs = songRec.search_track("0f2a3b6474214d87b144419b7ac084cd", "Feeling Whitney")
-for i in returnedSongs:
-    print(i["id"])
-
+#GUI IMPLEMENTATION#
 
 layout = [[sg.Image(filename="Logo4.png", pad=((0.0),(50,0)))],
           [sg.Text("Song Suggestion Algorithm", key='-TITLE-', justification='left', background_color='NONE', auto_size_text=True, font=["Gotham Medium", 16])],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Like', visible=False), sg.Button('Play', visible=False), sg.Button('Next', visible=False)],
-          #[sg.Button('Like', size=(25,1), visible=False)],
           [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter artist name", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
           [sg.Text(key='-OUTPUT-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))],
-          [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE'), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')]]
+          [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE', visible=False), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')],
+          [sg.Multiline(background_color='WHITE', default_text="Current Playlist:\n", key='-LIKED-')]]
 
 window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon="Logo.ico", resizable=False, element_justification='center', background_image="backb.png")
-#window.bind("'<Return>'",'-SONG-')
-#window.bind("'<Return>'",'-ARTIST-')
 
 dschange = 0
 idchange = 0
@@ -88,13 +92,14 @@ currentsong = ['Title','Artist',0,0,0,0]
 
 output = open("LikedSongs.txt", "w")
 output.write(str(idchange) + "\n")
+output.write("Done\n")
 output.close()
 output2 = open("MorT.txt", "w")
 output2.write(str(dschange) + "\n")
 output2.write("tree\n")
 output2.close()
-dschange += 1
-idchange += 1
+dschange = 1
+ischange = 1
 
 def updateSongs():
     if os.path.isfile('suggestions.txt'):
@@ -104,7 +109,7 @@ def updateSongs():
         if runtime != float(x):
             runtime = float(x)
             input.close()
-            df = pd.read_csv('suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'])
+            df = pd.read_csv('suggestions.txt', skiprows=1, names=['Title:','Artist:','Valence:','Danceability:','Energy:','Acousticness:'], delimiter="|")
             for index, row in df.iterrows():
                 title = row[0]
                 artist = row[1]
@@ -142,6 +147,7 @@ while True:
                 window['-OUTPUT-'].update('Song Added.')
                 window['-SONG-'].update(visible=True, value="Enter another song here")
                 window['-ARTIST-'].update(visible=False, value="Enter artist name")
+                window['-LIKED-'].update(value=song + " - " + artist + "\n", append=True)
                 inputtedsongs.append(songID)    
         except:
             window['-OUTPUT-'].update('Song Not Found.')
@@ -155,6 +161,7 @@ while True:
             window['-ARTIST-'].update(visible=False, value="Enter artist name")
             window['Add Artist'].update(visible=False)
             window['Add Song'].update(visible=True)
+            window['-LIKED-'].update(value=song + " - " + artist + "\n", append=True)
             inputtedsongs.append(songID)
         except:
             window['-OUTPUT-'].update(visible=True, value='Song Not Found.')
@@ -181,24 +188,26 @@ while True:
         else:
             window['-Tree-'].update(value=True)
             output2.write("tree\n")
-        output2.close()
         dschange += 1
-    if event == '-Tree-':
-        output2 = open("MorT.txt", "w")
-        output2.write(str(dschange) + "\n")
-        if window['-Tree-'].Get() == True:
-            window['-Map-'].update(value=False)
-            output2.write("tree\n")
-        else:
-            window['-Map-'].update(value=True)
-            output2.write("map\n")
         output2.close()
+        #dschange += 1
+    #if event == '-Tree-':
+    #    output2 = open("MorT.txt", "w")
+    #    output2.write(str(dschange) + "\n")
+    #    if window['-Tree-'].Get() == True:
+    #        window['-Map-'].update(value=False)
+    #        output2.write("tree\n")
+    #    else:
+    #        window['-Map-'].update(value=True)
+    #        output2.write("map\n")
+    #    output2.close()
     if event == 'Next':
         currentsong = songdata.get()
         window['-TITLE-'].update(currentsong[0])
         window['-SUBTITLE-'].update(currentsong[1])
         songdata.put(currentsong)
     if event == 'Like':
+        window['-LIKED-'].update(value=currentsong[0] + " - " + currentsong[1] + "\n", append=True)
         songID = findID2(currentsong[0],currentsong[1])
         inputtedsongs.append(songID)
         
