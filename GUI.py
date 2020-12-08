@@ -11,7 +11,7 @@ from queue import Queue
 
 
 #have to get a new spotify token before using this#
-spotify_token = "BQAyNC6Wx7finp5nGCAf8Ik3EyS4p3_CSb5Qdg2aHvaWr1T8ac1RmJrmSHack_pBO2fXnLIHVLrSoMw_2tqrQeEvaSD14nqK7f0ywPL0LTthTpfO3zT5dzROSa6nKWOXRP99G8FuJwF0SrA"
+spotify_token = "BQD9mBegnxbGpY67K2aus8cVr0qwBq0n6TYjHZw_gm5s4-qVspRUolxLrfgwB11ek52Czl7YJx1bvnHfO94QpTzDOFo8gsH9Y7Wztt7Ou6-xcCA9I_NxuKX9_4Rx43TMkqyyiy73GV2m9g4"
 class songRec:
 
     def search_track(self, song_name):
@@ -131,12 +131,13 @@ def updateSongs():
             input.close()
     else:
         updateSongs()
-
+        
 while True:
     event, values = window.read()
     if event == sg.WINDOW_CLOSED:
         break
     if event == 'Add Song':
+        os.remove("test.txt")
         song = values['-SONG-']
         try:
             songID = findID(song)
@@ -181,6 +182,8 @@ while True:
         output.write("Done\n")
         output.close()
         updateSongs()
+        temp = open('test.txt', "w")
+        temp.close()
 
     if event == '-Map-':
         output2 = open("MorT.txt", "w")
