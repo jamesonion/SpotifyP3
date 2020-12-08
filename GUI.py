@@ -4,6 +4,9 @@ import json
 import requests
 import PySimpleGUIQt as sg
 import pandas as pd
+import spotipy
+import webbrowser
+from spotipy.oauth2 import SpotifyClientCredentials
 
 from queue import Queue
 
@@ -11,7 +14,7 @@ from queue import Queue
 
 
 #have to get a new spotify token before using this#
-spotify_token = "BQD9mBegnxbGpY67K2aus8cVr0qwBq0n6TYjHZw_gm5s4-qVspRUolxLrfgwB11ek52Czl7YJx1bvnHfO94QpTzDOFo8gsH9Y7Wztt7Ou6-xcCA9I_NxuKX9_4Rx43TMkqyyiy73GV2m9g4"
+spotify_token = "BQBYkg8d4aut3Nr4pAWr2WBGLhuDP7NfDU688Fq4Q2q1NDAcQqlcz-dK4mzdcr-y1BU_SwyDpBZNdgI4PIZ9uhcE0IEr4kNvyJwFRAT4JrNmkejlSX3HI6053A8ZzKe3mDcKO8HhLsohB6g"
 class songRec:
 
     def search_track(self, song_name):
@@ -69,6 +72,12 @@ def findSample(_song):
      else:
         return returnedSongs[0]["id"]
 
+def url(ID):
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials("5d2c27886c8a4836844580b11c289dac","1372129a4a254c2a9642956dbe7b75f0"))
+    track = spotify.track(ID)
+    return track['preview_url']
+    #track['album']['images'][0]['url']
+
 #GUI IMPLEMENTATION#
 
 layout = [[sg.Image(filename="Logo4.png", key="-IMAGE-")],
@@ -76,12 +85,12 @@ layout = [[sg.Image(filename="Logo4.png", key="-IMAGE-")],
           [sg.Text("Add Songs you Enjoy One by One to Receive a Personalized Playlist", key='-SUBTITLE-', justification='center', background_color='NONE', auto_size_text=True)],
           [sg.Button('Like', visible=False), sg.Button('Play', visible=False), sg.Button('Next', visible=False)],
           [sg.InputText(default_text="Enter your song here", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-SONG-'), sg.InputText(default_text="Enter artist name", enable_events=True, do_not_clear=True, justification='center', size=(50,1), key='-ARTIST-', visible=False)],
-          [sg.Text(key='-OUTPUT-', justification='center', background_color='NONE', auto_size_text=True)],
+          [sg.Text(key='-OUTPUT-', background_color='NONE')],
           [sg.Button('Add Song', size=(25,1)), sg.Button('Add Artist', size=(25,1), visible=False), sg.Button('Submit', size=(25,1))],
           [sg.Checkbox("Tree Implementation", default=True, key='-Tree-', enable_events=True, background_color='NONE', visible=False), sg.Checkbox("Map Implementation", key='-Map-', enable_events=True, background_color='NONE')],
           [sg.Multiline(background_color='WHITE', default_text="Current Playlist:\n", key='-LIKED-')]]
 
-window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon="Logo.ico", resizable=False, element_justification='center', background_image="backb.png")
+window = sg.Window('Playlists to improve? Let’s find your groove.', layout, icon="Logo.ico", resizable=False, element_justification='center', background_image="backb.png", force_toplevel=True)
 
 dschange = 0
 idchange = 0
@@ -119,6 +128,11 @@ def updateSongs():
                 acousticness = row[5]
                 songdata.put([title,artist,valence,danceability,energy,acousticness])
             #window['-IMAGE-'].update(filename="")
+            if window['-Map-'].get() == True:
+                string = "map"
+            else:
+                string = "tree"
+            window['-OUTPUT-'].update("Runtime using a " + string + " data structure: " + str(runtime) + " ms", visible=True)
             window['Like'].update(visible=True)
             window['Play'].update(visible=True)
             window['Next'].update(visible=True)
@@ -147,7 +161,7 @@ while True:
                 window['Add Song'].update(visible=False)
                 window['-OUTPUT-'].update(visible=False)
             else:
-                window['-OUTPUT-'].update('Song Added.')
+                window['-OUTPUT-'].update('Song Added.', visible=True)
                 window['-SONG-'].update(visible=True, value="Enter another song here")
                 window['-ARTIST-'].update(visible=False, value="Enter artist name")
                 window['-LIKED-'].update(value=song + " - " + artist + "\n", append=True)
@@ -196,17 +210,9 @@ while True:
             output2.write("tree\n")
         dschange += 1
         output2.close()
-        #dschange += 1
-    #if event == '-Tree-':
-    #    output2 = open("MorT.txt", "w")
-    #    output2.write(str(dschange) + "\n")
-    #    if window['-Tree-'].Get() == True:
-    #        window['-Map-'].update(value=False)
-    #        output2.write("tree\n")
-    #    else:
-    #        window['-Map-'].update(value=True)
-    #        output2.write("map\n")
-    #    output2.close()
+    if event == 'Play':
+        url = url(str(findID2(currentsong[0],currentsong[1])))
+        webbrowser.open(url)
     if event == 'Next':
         currentsong = songdata.get()
         window['-TITLE-'].update(currentsong[0])
